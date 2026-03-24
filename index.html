@@ -42,7 +42,7 @@
 
         <div class="mt-auto pt-6 border-t border-gray-700 text-sm text-gray-400">
             <p>Admin Mode: Online</p>
-            <p>v1.0.5 (Updated GPS)</p>
+            <p>v1.0.6 (Linked with Apps Script)</p>
         </div>
     </aside>
 
@@ -215,7 +215,6 @@
 
             <!-- Attendance Report Page -->
             <div id="page-attendance" class="hidden space-y-6">
-                <!-- Similar to previous table with export buttons -->
                 <div class="bg-white p-6 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h4 class="font-bold">รายงานการเข้า-ออกงาน</h4>
@@ -231,12 +230,16 @@
     </main>
 
     <script>
-        // Set Today's Date
+        // --- ส่วนการตั้งค่าเชื่อมต่อ API ---
+        // นำ URL ที่ได้จาก Google Apps Script (ตอนกด Deploy) มาวางในเครื่องหมายคำพูดด้านล่างนี้
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgEivcGUq1Nlh2vuNQfHNGpGcdyZYdOsd0N4Klxnumnk2vixVbRDuvdrk8lVtetmI2/exec";
+
+        // ตั้งค่าวันที่ปัจจุบัน
         document.getElementById('current-date').innerText = new Intl.DateTimeFormat('th-TH', { 
             dateStyle: 'full' 
         }).format(new Date());
 
-        // Navigation Logic
+        // การเปลี่ยนหน้าจอเมนู
         function showPage(pageId) {
             const titles = {
                 'dashboard': 'แดชบอร์ดภาพรวม',
@@ -246,17 +249,16 @@
             };
             document.getElementById('page-title').innerText = titles[pageId];
             ['dashboard', 'staff', 'attendance', 'settings'].forEach(p => {
-                document.getElementById('page-' + p).classList.add('hidden');
+                const el = document.getElementById('page-' + p);
+                if (el) el.classList.add('hidden');
             });
-            document.getElementById('page-' + pageId).classList.remove('hidden');
+            const activePage = document.getElementById('page-' + pageId);
+            if (activePage) activePage.classList.remove('hidden');
         }
 
-        /**
-         * GPS DISTANCE CALCULATION (Haversine Formula)
-         * ฟังก์ชันคำนวณระยะห่างระหว่าง 2 จุด (Lat, Lng)
-         */
+        // สูตรคำนวณระยะทาง GPS (Haversine Formula)
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // รัศมีโลกเฉลี่ย (เมตร)
+            const R = 6371e3; 
             const φ1 = lat1 * Math.PI/180;
             const φ2 = lat2 * Math.PI/180;
             const Δφ = (lat2-lat1) * Math.PI/180;
@@ -267,9 +269,10 @@
                       Math.sin(Δλ/2) * Math.sin(Δλ/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-            return R * c; // ระยะทางในหน่วยเมตร
+            return R * c; 
         }
 
+        // ฟังก์ชันตรวจสอบตำแหน่งปัจจุบัน
         function checkCurrentGPS() {
             const statusEl = document.getElementById('gps-status');
             const targetLat = parseFloat(document.getElementById('target-lat').value);
@@ -298,7 +301,34 @@
             });
         }
 
-        // Initialize Weekly Chart
+        // ฟังก์ชันส่งข้อมูลไปยัง Google Sheets
+        async function sendAttendanceToSheet(staffName, currentLat, currentLng, distance) {
+            if (SCRIPT_URL === "ใส่_URL_ที่ได้จาก_APPS_SCRIPT_ตรงนี้") {
+                alert("กรุณาใส่ Web App URL ในโค้ดก่อนใช้งาน");
+                return;
+            }
+
+            const payload = {
+                action: 'checkin',
+                name: staffName,
+                lat: currentLat,
+                lng: currentLng,
+                distance: distance
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                alert("บันทึกสำเร็จ: " + result.message);
+            } catch (error) {
+                alert("บันทึกไม่สำเร็จ: " + error.message);
+            }
+        }
+
+        // สร้างกราฟสถิติ
         const ctx = document.getElementById('weeklyChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
