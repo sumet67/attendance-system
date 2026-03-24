@@ -12,6 +12,8 @@
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
         .sidebar-item:hover { background-color: #374151; border-radius: 0.5rem; }
         .active-tab { background-color: #2563eb; border-radius: 0.5rem; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex overflow-hidden">
@@ -42,7 +44,7 @@
 
         <div class="mt-auto pt-6 border-t border-gray-700 text-sm text-gray-400">
             <p>Admin Mode: Online</p>
-            <p>v1.0.6 (Linked with Apps Script)</p>
+            <p>v1.0.7 (Staff Registration Added)</p>
         </div>
     </aside>
 
@@ -123,17 +125,8 @@
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex gap-2">
                             <input type="text" placeholder="ค้นหาบุคลากร..." class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <select class="border rounded-lg px-4 py-2 text-sm focus:outline-none">
-                                <option>ทั้งหมด</option>
-                                <option>ผู้บริหาร</option>
-                                <option>ครู</option>
-                                <option>เจ้าหน้าที่</option>
-                                <option>ภารโรง</option>
-                                <option>ยาม</option>
-                                <option>แม่บ้าน</option>
-                            </select>
                         </div>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                        <button onclick="toggleModal('staff-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                             <i class="fas fa-plus mr-2"></i> เพิ่มบุคลากร
                         </button>
                     </div>
@@ -141,19 +134,18 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
-                                    <th class="p-4 border-b">รูป</th>
+                                    <th class="p-4 border-b">รหัสพนักงาน</th>
                                     <th class="p-4 border-b">ชื่อ-นามสกุล</th>
                                     <th class="p-4 border-b">ประเภท</th>
-                                    <th class="p-4 border-b">สถานะลงทะเบียน</th>
                                     <th class="p-4 border-b text-center">จัดการ</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="staff-table-body">
+                                <!-- ข้อมูลจะถูกดึงมาใส่ตรงนี้ -->
                                 <tr>
-                                    <td class="p-4 border-b"><div class="w-10 h-10 bg-gray-200 rounded-lg"></div></td>
+                                    <td class="p-4 border-b">EMP001</td>
                                     <td class="p-4 border-b font-medium">ดร. วิทยา ประวัติการ</td>
                                     <td class="p-4 border-b">ผู้บริหาร</td>
-                                    <td class="p-4 border-b"><span class="text-green-600">ลงทะเบียนแล้ว</span></td>
                                     <td class="p-4 border-b text-center">
                                         <button class="text-blue-600 mx-1"><i class="fas fa-edit"></i></button>
                                         <button class="text-red-600 mx-1"><i class="fas fa-trash"></i></button>
@@ -190,24 +182,6 @@
                             <button onclick="checkCurrentGPS()" class="w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300">
                                 <i class="fas fa-location-crosshairs mr-2"></i> ตรวจสอบตำแหน่งปัจจุบัน
                             </button>
-                            <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">บันทึกพิกัด</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h4 class="font-bold mb-4"><i class="fas fa-clock text-blue-500 mr-2"></i> ตั้งค่าเวลาทำงาน</h4>
-                        <div class="space-y-4">
-                            <div class="flex gap-4">
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium mb-1">เวลาเข้างาน</label>
-                                    <input type="time" value="08:00" class="w-full border rounded-lg px-4 py-2">
-                                </div>
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium mb-1">ถือว่ามาสายหลัง</label>
-                                    <input type="time" value="08:15" class="w-full border rounded-lg px-4 py-2">
-                                </div>
-                            </div>
-                            <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">บันทึกเวลา</button>
                         </div>
                     </div>
                 </div>
@@ -229,17 +203,53 @@
         </div>
     </main>
 
+    <!-- Modal เพิ่มบุคลากร -->
+    <div id="staff-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3 border-b mb-4">
+                    <p class="text-2xl font-bold">เพิ่มบุคลากรใหม่</p>
+                    <div class="modal-close cursor-pointer z-50" onclick="toggleModal('staff-modal')">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </div>
+                </div>
+                <form id="staff-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">รหัสพนักงาน/ID</label>
+                        <input type="text" id="staff-id" required class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
+                        <input type="text" id="staff-name" required class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ตำแหน่ง/ประเภท</label>
+                        <select id="staff-role" class="mt-1 block w-full border rounded-md shadow-sm p-2">
+                            <option>ผู้บริหาร</option>
+                            <option>ครู</option>
+                            <option>เจ้าหน้าที่</option>
+                            <option>อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end pt-2 space-x-2">
+                        <button type="button" onclick="toggleModal('staff-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold">บันทึกข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- ส่วนการตั้งค่าเชื่อมต่อ API ---
-        // นำ URL ที่ได้จาก Google Apps Script (ตอนกด Deploy) มาวางในเครื่องหมายคำพูดด้านล่างนี้
+        // *** สำคัญ: ต้องนำ URL จาก Google Apps Script มาวางตรงนี้ ***
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgEivcGUq1Nlh2vuNQfHNGpGcdyZYdOsd0N4Klxnumnk2vixVbRDuvdrk8lVtetmI2/exec";
 
-        // ตั้งค่าวันที่ปัจจุบัน
         document.getElementById('current-date').innerText = new Intl.DateTimeFormat('th-TH', { 
             dateStyle: 'full' 
         }).format(new Date());
 
-        // การเปลี่ยนหน้าจอเมนู
         function showPage(pageId) {
             const titles = {
                 'dashboard': 'แดชบอร์ดภาพรวม',
@@ -256,23 +266,68 @@
             if (activePage) activePage.classList.remove('hidden');
         }
 
-        // สูตรคำนวณระยะทาง GPS (Haversine Formula)
+        // ฟังก์ชันเปิด/ปิด Modal
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('opacity-0');
+            modal.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
+        }
+
+        // จัดการการส่งฟอร์มเพิ่มบุคลากร
+        document.getElementById('staff-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const staffId = document.getElementById('staff-id').value;
+            const staffName = document.getElementById('staff-name').value;
+            const staffRole = document.getElementById('staff-role').value;
+
+            if (SCRIPT_URL === "ใส่_URL_ที่ได้จาก_APPS_SCRIPT_ตรงนี้") {
+                alert("กรุณาตั้งค่า URL ของ Apps Script ก่อนในโค้ดบรรทัดที่ 210");
+                return;
+            }
+
+            const payload = {
+                action: 'register',
+                staffId: staffId,
+                name: staffName,
+                role: staffRole
+            };
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerText = "กำลังบันทึก...";
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                alert("บันทึกบุคลากรสำเร็จ!");
+                toggleModal('staff-modal');
+                e.target.reset();
+                // คุณสามารถเพิ่มฟังก์ชันรีโหลดตารางตรงนี้ได้
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            } finally {
+                submitBtn.innerText = "บันทึกข้อมูล";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // สูตรคำนวณระยะทาง GPS
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; 
             const φ1 = lat1 * Math.PI/180;
             const φ2 = lat2 * Math.PI/180;
             const Δφ = (lat2-lat1) * Math.PI/180;
             const Δλ = (lon2-lon1) * Math.PI/180;
-
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
             return R * c; 
         }
 
-        // ฟังก์ชันตรวจสอบตำแหน่งปัจจุบัน
         function checkCurrentGPS() {
             const statusEl = document.getElementById('gps-status');
             const targetLat = parseFloat(document.getElementById('target-lat').value);
@@ -285,50 +340,14 @@
             }
 
             statusEl.innerText = "กำลังดึงพิกัด...";
-            
             navigator.geolocation.getCurrentPosition((position) => {
-                const currentLat = position.coords.latitude;
-                const currentLng = position.coords.longitude;
-                const distance = calculateDistance(currentLat, currentLng, targetLat, targetLng);
-                
-                if (distance <= targetRadius) {
-                    statusEl.innerHTML = `<span class="text-green-600 font-bold">อยู่ในเขตสแกน!</span><br>ห่างจากเป้าหมาย: ${distance.toFixed(2)} เมตร`;
-                } else {
-                    statusEl.innerHTML = `<span class="text-red-600 font-bold">อยู่นอกเขตสแกน!</span><br>ห่างจากเป้าหมาย: ${distance.toFixed(2)} เมตร (รัศมีที่ยอมรับได้คือ ${targetRadius} เมตร)`;
-                }
-            }, (error) => {
-                statusEl.innerText = "ไม่สามารถเข้าถึงตำแหน่งได้: " + error.message;
-            });
+                const distance = calculateDistance(position.coords.latitude, position.coords.longitude, targetLat, targetLng);
+                statusEl.innerHTML = distance <= targetRadius ? 
+                    `<span class="text-green-600 font-bold">อยู่ในเขต!</span> (${distance.toFixed(1)}ม.)` : 
+                    `<span class="text-red-600 font-bold">อยู่นอกเขต!</span> (${distance.toFixed(1)}ม.)`;
+            }, (err) => statusEl.innerText = "Error: " + err.message);
         }
 
-        // ฟังก์ชันส่งข้อมูลไปยัง Google Sheets
-        async function sendAttendanceToSheet(staffName, currentLat, currentLng, distance) {
-            if (SCRIPT_URL === "ใส่_URL_ที่ได้จาก_APPS_SCRIPT_ตรงนี้") {
-                alert("กรุณาใส่ Web App URL ในโค้ดก่อนใช้งาน");
-                return;
-            }
-
-            const payload = {
-                action: 'checkin',
-                name: staffName,
-                lat: currentLat,
-                lng: currentLng,
-                distance: distance
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                alert("บันทึกสำเร็จ: " + result.message);
-            } catch (error) {
-                alert("บันทึกไม่สำเร็จ: " + error.message);
-            }
-        }
-
-        // สร้างกราฟสถิติ
         const ctx = document.getElementById('weeklyChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
