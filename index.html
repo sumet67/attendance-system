@@ -44,14 +44,12 @@
 
         <div class="mt-auto pt-6 border-t border-gray-700 text-sm text-gray-400">
             <p>Admin Mode: Online</p>
-            <p>v1.0.7 (Staff Registration Added)</p>
+            <p>v1.0.8 (Live Sync Ready)</p>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col overflow-hidden">
-        
-        <!-- Header -->
         <header class="bg-white shadow-sm z-10 p-4 flex justify-between items-center">
             <h2 id="page-title" class="text-xl font-semibold text-gray-800">แดชบอร์ดภาพรวม</h2>
             <div class="flex items-center gap-4">
@@ -60,74 +58,32 @@
             </div>
         </header>
 
-        <!-- Content Area -->
         <div class="flex-1 overflow-y-auto p-6" id="content-container">
-            
-            <!-- Dashboard Page -->
+            <!-- Dashboard -->
             <div id="page-dashboard" class="space-y-6">
-                <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                        <p class="text-sm text-gray-500 mb-1">ทั้งหมด</p>
-                        <h3 class="text-3xl font-bold">120</h3>
+                        <p class="text-sm text-gray-500 mb-1">พนักงานทั้งหมด</p>
+                        <h3 class="text-3xl font-bold" id="total-staff-count">0</h3>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
                         <p class="text-sm text-gray-500 mb-1">มาทำงานแล้ว</p>
-                        <h3 class="text-3xl font-bold text-green-600">85</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
-                        <p class="text-sm text-gray-500 mb-1">มาสาย</p>
-                        <h3 class="text-3xl font-bold text-yellow-600">12</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500">
-                        <p class="text-sm text-gray-500 mb-1">ยังไม่มา</p>
-                        <h3 class="text-3xl font-bold text-red-600">23</h3>
+                        <h3 class="text-3xl font-bold text-green-600">0</h3>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h4 class="font-bold mb-4">สถิติการมาทำงานรายสัปดาห์</h4>
-                        <canvas id="weeklyChart" height="200"></canvas>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="font-bold">รายการล่าสุดวันนี้</h4>
-                            <button class="text-blue-600 text-sm hover:underline">ดูทั้งหมด</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="border-b text-gray-400 text-sm">
-                                    <tr>
-                                        <th class="py-2">ชื่อ-นามสกุล</th>
-                                        <th class="py-2">บทบาท</th>
-                                        <th class="py-2">เวลาเข้า</th>
-                                        <th class="py-2">สถานะ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm" id="recent-logs">
-                                    <tr class="border-b">
-                                        <td class="py-3 font-medium">นายสมชาย มั่นคง</td>
-                                        <td class="py-3">ครู</td>
-                                        <td class="py-3">07:45</td>
-                                        <td class="py-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">ปกติ</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h4 class="font-bold mb-4">สถิติสัปดาห์นี้</h4>
+                    <canvas id="weeklyChart" height="100"></canvas>
                 </div>
             </div>
 
-            <!-- Staff Page -->
+            <!-- Staff Management -->
             <div id="page-staff" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
-                        <div class="flex gap-2">
-                            <input type="text" placeholder="ค้นหาบุคลากร..." class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <button onclick="toggleModal('staff-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-plus mr-2"></i> เพิ่มบุคลากร
+                        <h4 class="font-bold text-lg">รายชื่อบุคลากรในระบบ</h4>
+                        <button onclick="toggleModal('staff-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+                            <i class="fas fa-plus mr-2"></i> เพิ่มบุคลากรใหม่
                         </button>
                     </div>
                     <div class="overflow-x-auto">
@@ -136,105 +92,49 @@
                                 <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
                                     <th class="p-4 border-b">รหัสพนักงาน</th>
                                     <th class="p-4 border-b">ชื่อ-นามสกุล</th>
-                                    <th class="p-4 border-b">ประเภท</th>
+                                    <th class="p-4 border-b">ตำแหน่ง</th>
                                     <th class="p-4 border-b text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="staff-table-body">
-                                <!-- ข้อมูลจะถูกดึงมาใส่ตรงนี้ -->
-                                <tr>
-                                    <td class="p-4 border-b">EMP001</td>
-                                    <td class="p-4 border-b font-medium">ดร. วิทยา ประวัติการ</td>
-                                    <td class="p-4 border-b">ผู้บริหาร</td>
-                                    <td class="p-4 border-b text-center">
-                                        <button class="text-blue-600 mx-1"><i class="fas fa-edit"></i></button>
-                                        <button class="text-red-600 mx-1"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
+                                <tr><td colspan="4" class="p-4 text-center text-gray-400">กำลังโหลดข้อมูล...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Settings Page -->
+            <!-- Settings -->
             <div id="page-settings" class="hidden space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h4 class="font-bold mb-4"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i> ตั้งค่าพิกัด GPS</h4>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Latitude</label>
-                                <input type="text" id="target-lat" value="13.7563" class="w-full border rounded-lg px-4 py-2 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Longitude</label>
-                                <input type="text" id="target-lng" value="100.5018" class="w-full border rounded-lg px-4 py-2 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">รัศมีที่อนุญาต (เมตร)</label>
-                                <input type="number" id="target-radius" value="100" class="w-full border rounded-lg px-4 py-2">
-                            </div>
-                            <div class="p-4 bg-gray-50 rounded-lg text-sm">
-                                <p class="font-semibold text-blue-600 mb-2">ทดสอบพิกัดของคุณ:</p>
-                                <p id="gps-status" class="text-gray-500 italic">กดปุ่มด้านล่างเพื่อตรวจสอบ...</p>
-                            </div>
-                            <button onclick="checkCurrentGPS()" class="w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300">
-                                <i class="fas fa-location-crosshairs mr-2"></i> ตรวจสอบตำแหน่งปัจจุบัน
-                            </button>
+                <div class="bg-white p-6 rounded-xl shadow-sm max-w-lg">
+                    <h4 class="font-bold mb-4">ตั้งค่า API และพิกัด</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-red-600">Web App URL (จาก Apps Script)</label>
+                            <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/..." class="w-full border rounded-lg px-4 py-2 mt-1">
                         </div>
+                        <button onclick="saveSettings()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-bold">บันทึกการตั้งค่า</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Attendance Report Page -->
-            <div id="page-attendance" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <h4 class="font-bold">รายงานการเข้า-ออกงาน</h4>
-                        <div class="flex gap-2">
-                            <button class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm"><i class="fas fa-file-pdf mr-2"></i> PDF</button>
-                            <button class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm"><i class="fas fa-file-excel mr-2"></i> Excel</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </main>
 
-    <!-- Modal เพิ่มบุคลากร -->
+    <!-- Modal -->
     <div id="staff-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50">
             <div class="modal-content py-4 text-left px-6">
-                <div class="flex justify-between items-center pb-3 border-b mb-4">
-                    <p class="text-2xl font-bold">เพิ่มบุคลากรใหม่</p>
-                    <div class="modal-close cursor-pointer z-50" onclick="toggleModal('staff-modal')">
-                        <i class="fas fa-times text-gray-500"></i>
-                    </div>
-                </div>
+                <h3 class="text-xl font-bold mb-4 border-b pb-2">กรอกข้อมูลพนักงาน</h3>
                 <form id="staff-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">รหัสพนักงาน/ID</label>
-                        <input type="text" id="staff-id" required class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
-                        <input type="text" id="staff-name" required class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ตำแหน่ง/ประเภท</label>
-                        <select id="staff-role" class="mt-1 block w-full border rounded-md shadow-sm p-2">
-                            <option>ผู้บริหาร</option>
-                            <option>ครู</option>
-                            <option>เจ้าหน้าที่</option>
-                            <option>อื่นๆ</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end pt-2 space-x-2">
-                        <button type="button" onclick="toggleModal('staff-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">ยกเลิก</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold">บันทึกข้อมูล</button>
+                    <input type="text" id="staff-id" placeholder="รหัสพนักงาน" required class="w-full border rounded p-2">
+                    <input type="text" id="staff-name" placeholder="ชื่อ-นามสกุล" required class="w-full border rounded p-2">
+                    <select id="staff-role" class="w-full border rounded p-2">
+                        <option>ผู้บริหาร</option><option>ครู</option><option>เจ้าหน้าที่</option><option>อื่นๆ</option>
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="toggleModal('staff-modal')" class="bg-gray-200 px-4 py-2 rounded">ยกเลิก</button>
+                        <button type="submit" id="save-btn" class="bg-blue-600 text-white px-4 py-2 rounded font-bold">บันทึก</button>
                     </div>
                 </form>
             </div>
@@ -242,124 +142,83 @@
     </div>
 
     <script>
-        // --- ส่วนการตั้งค่าเชื่อมต่อ API ---
-        // *** สำคัญ: ต้องนำ URL จาก Google Apps Script มาวางตรงนี้ ***
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgEivcGUq1Nlh2vuNQfHNGpGcdyZYdOsd0N4Klxnumnk2vixVbRDuvdrk8lVtetmI2/exec";
+        let SCRIPT_URL = localStorage.getItem('faceScanApiUrl') || "";
+        document.getElementById('api-url-input').value = SCRIPT_URL;
 
-        document.getElementById('current-date').innerText = new Intl.DateTimeFormat('th-TH', { 
-            dateStyle: 'full' 
-        }).format(new Date());
-
-        function showPage(pageId) {
-            const titles = {
-                'dashboard': 'แดชบอร์ดภาพรวม',
-                'staff': 'จัดการบุคลากร & ทะเบียนใบหน้า',
-                'attendance': 'รายงานการเข้างาน',
-                'settings': 'ตั้งค่าระบบ & GPS'
-            };
-            document.getElementById('page-title').innerText = titles[pageId];
-            ['dashboard', 'staff', 'attendance', 'settings'].forEach(p => {
-                const el = document.getElementById('page-' + p);
-                if (el) el.classList.add('hidden');
-            });
-            const activePage = document.getElementById('page-' + pageId);
-            if (activePage) activePage.classList.remove('hidden');
+        function saveSettings() {
+            const url = document.getElementById('api-url-input').value;
+            localStorage.setItem('faceScanApiUrl', url);
+            SCRIPT_URL = url;
+            alert("บันทึก URL เรียบร้อยแล้ว!");
+            location.reload();
         }
 
-        // ฟังก์ชันเปิด/ปิด Modal
-        function toggleModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.toggle('opacity-0');
-            modal.classList.toggle('pointer-events-none');
-            document.body.classList.toggle('modal-active');
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.classList.toggle('opacity-0');
+            m.classList.toggle('pointer-events-none');
         }
 
-        // จัดการการส่งฟอร์มเพิ่มบุคลากร
-        document.getElementById('staff-form').addEventListener('submit', async function(e) {
+        async function fetchStaff() {
+            if(!SCRIPT_URL) return;
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                const tbody = document.getElementById('staff-table-body');
+                tbody.innerHTML = '';
+                document.getElementById('total-staff-count').innerText = data.length;
+                
+                data.forEach(s => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="p-4">${s['ID พนักงาน'] || '-'}</td>
+                            <td class="p-4 font-medium">${s['ชื่อ-นามสกุล'] || '-'}</td>
+                            <td class="p-4">${s['ตำแหน่ง'] || '-'}</td>
+                            <td class="p-4 text-center">
+                                <button class="text-red-500"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('staff-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if(!SCRIPT_URL) return alert("กรุณาตั้งค่า Web App URL ที่เมนูตั้งค่าก่อน");
             
-            const staffId = document.getElementById('staff-id').value;
-            const staffName = document.getElementById('staff-name').value;
-            const staffRole = document.getElementById('staff-role').value;
-
-            if (SCRIPT_URL === "ใส่_URL_ที่ได้จาก_APPS_SCRIPT_ตรงนี้") {
-                alert("กรุณาตั้งค่า URL ของ Apps Script ก่อนในโค้ดบรรทัดที่ 210");
-                return;
-            }
+            const btn = document.getElementById('save-btn');
+            btn.disabled = true; btn.innerText = "กำลังบันทึก...";
 
             const payload = {
                 action: 'register',
-                staffId: staffId,
-                name: staffName,
-                role: staffRole
+                staffId: document.getElementById('staff-id').value,
+                name: document.getElementById('staff-name').value,
+                role: document.getElementById('staff-role').value
             };
 
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.innerText = "กำลังบันทึก...";
-            submitBtn.disabled = true;
-
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                alert("บันทึกบุคลากรสำเร็จ!");
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                alert("บันทึกสำเร็จ!");
                 toggleModal('staff-modal');
+                fetchStaff();
                 e.target.reset();
-                // คุณสามารถเพิ่มฟังก์ชันรีโหลดตารางตรงนี้ได้
-            } catch (error) {
-                alert("เกิดข้อผิดพลาด: " + error.message);
-            } finally {
-                submitBtn.innerText = "บันทึกข้อมูล";
-                submitBtn.disabled = false;
-            }
+            } catch (err) { alert("ล้มเหลว: " + err.message); }
+            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
         });
 
-        // สูตรคำนวณระยะทาง GPS
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; 
-            const φ1 = lat1 * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2-lat1) * Math.PI/180;
-            const Δλ = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
+        function showPage(id) {
+            ['dashboard', 'staff', 'settings'].forEach(p => document.getElementById('page-'+p).classList.add('hidden'));
+            document.getElementById('page-'+id).classList.remove('hidden');
+            if(id === 'staff') fetchStaff();
         }
 
-        function checkCurrentGPS() {
-            const statusEl = document.getElementById('gps-status');
-            const targetLat = parseFloat(document.getElementById('target-lat').value);
-            const targetLng = parseFloat(document.getElementById('target-lng').value);
-            const targetRadius = parseFloat(document.getElementById('target-radius').value);
-
-            if (!navigator.geolocation) {
-                statusEl.innerText = "เบราว์เซอร์ไม่รองรับ GPS";
-                return;
-            }
-
-            statusEl.innerText = "กำลังดึงพิกัด...";
-            navigator.geolocation.getCurrentPosition((position) => {
-                const distance = calculateDistance(position.coords.latitude, position.coords.longitude, targetLat, targetLng);
-                statusEl.innerHTML = distance <= targetRadius ? 
-                    `<span class="text-green-600 font-bold">อยู่ในเขต!</span> (${distance.toFixed(1)}ม.)` : 
-                    `<span class="text-red-600 font-bold">อยู่นอกเขต!</span> (${distance.toFixed(1)}ม.)`;
-            }, (err) => statusEl.innerText = "Error: " + err.message);
-        }
+        window.onload = () => {
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', { dateStyle: 'full' });
+            fetchStaff();
+        };
 
         const ctx = document.getElementById('weeklyChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'],
-                datasets: [
-                    { label: 'มาทำงาน', data: [110, 115, 108, 120, 112], backgroundColor: '#3b82f6' },
-                    { label: 'สาย', data: [8, 5, 12, 0, 7], backgroundColor: '#fbbf24' }
-                ]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
+        new Chart(ctx, { type: 'line', data: { labels: ['จ', 'อ', 'พ', 'พฤ', 'ศ'], datasets: [{ label: 'จำนวนคนมาทำงาน', data: [45, 52, 48, 60, 55], borderColor: '#3b82f6', tension: 0.3 }] } });
     </script>
 </body>
 </html>
