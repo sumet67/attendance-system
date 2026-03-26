@@ -3,399 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Face Scanner Pro - Index</title>
+    <title>Attendance Dashboard - AI Face Scanner (Cloud System)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #00f2ff;
-            --bg-dark: #0a0b10;
-            --success-color: #00ff88;
+            --bg-dark: #0f111a;
         }
-
         body {
             font-family: 'Kanit', sans-serif;
             background-color: var(--bg-dark);
             color: white;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
+            min-height: 100vh;
         }
-
-        .cyber-font { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
-
-        .scanner-container {
-            position: relative;
-            width: 320px;
-            height: 420px;
-            border-radius: 40px;
-            overflow: hidden;
-            border: 2px solid rgba(0, 242, 255, 0.4);
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
-            background: #000;
-        }
-
-        video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            transform: translate(-50%, -50%) scaleX(-1);
-            object-fit: cover;
-        }
-
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--primary-color);
-            box-shadow: 0 0 15px var(--primary-color);
-            z-index: 10;
-            animation: scan 2.5s ease-in-out infinite;
-        }
-
-        @keyframes scan {
-            0%, 100% { top: 10%; opacity: 0; }
-            50% { top: 90%; opacity: 1; }
-        }
-
-        .face-frame {
-            position: absolute;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 260px;
-            border: 2px dashed rgba(0, 242, 255, 0.3);
-            border-radius: 50% 50% 45% 45%;
-            z-index: 5;
-            transition: all 0.3s;
-        }
-
-        .face-frame.detected {
-            border-color: var(--success-color);
-            border-style: solid;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
-        }
-
-        .glass-panel {
-            background: rgba(16, 18, 27, 0.8);
-            backdrop-filter: blur(12px);
+        .cyber-font { font-family: 'Orbitron', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border-radius: 1.5rem;
         }
-
-        .admin-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            padding: 8px 16px;
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
             background: rgba(0, 242, 255, 0.1);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 10px;
-            color: #00f2ff;
-            font-size: 10px;
-            font-family: 'Orbitron', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--primary-color);
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
         }
-
-        .reg-button {
-            background: linear-gradient(90deg, rgba(0,242,255,0.1), rgba(0,242,255,0.05));
-            border: 1px solid rgba(0,242,255,0.3);
-            transition: all 0.3s;
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
         }
-
-        .reg-button:hover {
-            background: rgba(0,242,255,0.2);
-            border-color: var(--primary-color);
-        }
-
-        #registration-modal {
+        .btn-action { transition: all 0.3s; cursor: pointer; }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2); }
+        .sync-active { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* สไตล์สำหรับ Loading Overlay */
+        #loadingOverlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 2000;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-        }
-
-        .input-field {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            width: 100%;
-            outline: none;
-            font-size: 16px;
-        }
-
-        .success-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 255, 136, 0.2);
-            display: none;
-            z-index: 15;
-            pointer-events: none;
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
-<body class="p-4">
+<body class="p-6">
 
-    <!-- Control Buttons -->
-    <div class="fixed top-5 right-5 flex gap-2 z-50">
-        <a href="attendance_dashboard.html" class="admin-btn !relative !top-0 !right-0 border-cyan-400/50 hover:bg-cyan-400/10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            DASHBOARD (CLOUD)
-        </a>
-    </div>
-
-    <div class="max-w-md w-full flex flex-col items-center gap-4">
-        
-        <div class="text-center space-y-1">
-            <h1 class="text-2xl font-bold cyber-font text-cyan-400">FAST SCAN</h1>
-            <p id="aiStatus" class="text-gray-500 text-[9px] cyber-font uppercase">Loading Systems...</p>
-        </div>
-
-        <!-- Scanner View -->
-        <div class="scanner-container">
-            <video id="video" autoplay playsinline muted></video>
-            <div id="scanLine" class="scan-line" style="display: none;"></div>
-            <div id="faceFrame" class="face-frame"></div>
-            <div id="successOverlay" class="success-overlay"></div>
-            
-            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%] glass-panel p-3 text-[10px] cyber-font z-20">
-                <div class="flex flex-col gap-1">
-                    <div class="flex justify-between items-center">
-                        <div class="flex flex-col">
-                            <span id="displayUser" class="text-cyan-400 font-bold truncate max-w-[120px]">READY TO SCAN</span>
-                            <span id="displayRole" class="text-[8px] text-gray-400 uppercase">Wait for Identity</span>
-                        </div>
-                        <span id="scanPercent" class="text-cyan-400">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-900 h-1 rounded-full overflow-hidden mt-1">
-                        <div id="progressBar" class="bg-cyan-400 h-full w-0 transition-all duration-100"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="w-full space-y-3">
-            <div class="glass-panel p-4 flex items-center justify-between border-l-4 border-l-cyan-500">
-                <div class="flex items-center gap-3">
-                    <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                    <span id="statusText" class="text-[11px] text-yellow-500 uppercase font-bold">Scanning...</span>
-                </div>
-            </div>
-
-            <button type="button" onclick="openRegistration()" class="w-full py-3 reg-button rounded-xl flex items-center justify-center gap-2 group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                <span class="text-xs font-bold text-gray-300">ลงทะเบียนพนักงานใหม่ (Register)</span>
-            </button>
+    <div id="loadingOverlay">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="cyber-font text-cyan-400 text-sm animate-pulse">CONNECTING TO GOOGLE SHEETS...</p>
         </div>
     </div>
 
-    <!-- Registration Modal -->
-    <div id="registration-modal">
-        <div class="glass-panel p-8 w-full max-w-sm space-y-5 border-t-2 border-cyan-500 shadow-2xl">
-            <h3 class="cyber-font text-sm text-cyan-400 text-center uppercase">New Registration</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] text-gray-400 uppercase mb-1 block">Full Name</label>
-                    <input type="text" id="regName" class="input-field" placeholder="ชื่อ - นามสกุล">
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-400 uppercase mb-1 block">Role / Position</label>
-                    <select id="regRole" class="input-field">
-                        <option value="Executive">ผู้บริหาร</option>
-                        <option value="Teacher">ครู / อาจารย์</option>
-                        <option value="Officer">เจ้าหน้าที่</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="closeRegistration()" class="flex-1 py-3 bg-gray-800 rounded-xl text-xs font-bold text-gray-300">CANCEL</button>
-                    <button type="button" onclick="saveRegistration()" class="flex-1 py-3 bg-cyan-600 rounded-xl text-xs font-bold text-white shadow-lg shadow-cyan-500/20">CONFIRM</button>
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold cyber-font text-cyan-400">CLOUD DASHBOARD</h1>
+                <p class="text-gray-400 text-sm">ข้อมูลเรียลไทม์จาก Google Sheets</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="face_scanner.html" class="btn-action bg-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
+                    หน้าสแกน
+                </a>
+                <button id="syncBtn" onclick="fetchDataFromCloud()" class="btn-action bg-cyan-600 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-cyan-400">
+                    <svg id="syncIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    รีเฟรชข้อมูล (Cloud)
+                </button>
+                <button onclick="exportToPDF()" class="btn-action bg-red-600/20 hover:bg-red-600/30 text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    EXPORT PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-6 border-l-4 border-cyan-500">
+                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">จำนวนการสแกนทั้งหมด</p>
+                <h2 id="totalScans" class="text-3xl font-bold cyber-font">0</h2>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-green-500">
+                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">Cloud Status</p>
+                <h2 id="cloudStatus" class="text-xl font-bold cyber-font text-green-400 text-sm">CONNECTED</h2>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-purple-500">
+                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">Database Source</p>
+                <h2 class="text-xl font-bold cyber-font text-sm">GOOGLE SHEETS</h2>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-bold text-lg">ประวัติการลงเวลาล่าสุด</h3>
+                <span class="text-[10px] text-gray-500 uppercase cyber-font">ข้อมูลอัปเดตอัตโนมัติจาก Cloud</span>
+            </div>
+            <div class="table-container">
+                <table id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>วัน-เวลา</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th>ตำแหน่ง/รหัส</th>
+                            <th>สถานะการเชื่อมต่อ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-gray-300">
+                        <!-- รายการจะถูกแทรกที่นี่ -->
+                    </tbody>
+                </table>
+                <div id="noData" class="p-20 text-center text-gray-600 hidden">
+                    ไม่พบข้อมูลบน Google Sheets
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- เปลี่ยน SCRIPT_URL เป็นของคุณ ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw-VLlXQtdmhZ46X3AeSZbXX_SDKTbay2VJeO6nM5xS7LPfWcsLZpQ0fOwzvCsA2o9QA/exec"; 
-        
-        const video = document.getElementById('video');
-        const faceFrame = document.getElementById('faceFrame');
-        const aiStatus = document.getElementById('aiStatus');
-        const statusText = document.getElementById('statusText');
-        const statusDot = document.getElementById('statusDot');
-        const progressBar = document.getElementById('progressBar');
-        const scanPercent = document.getElementById('scanPercent');
-        const displayUser = document.getElementById('displayUser');
-        const displayRole = document.getElementById('displayRole');
-        const scanLine = document.getElementById('scanLine');
-        const successOverlay = document.getElementById('successOverlay');
+        // --- ส่วนที่ต้องแก้ไข: ใส่ URL ของ Google Apps Script ของคุณ ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw-VLlXQtdmhZ46X3AeSZbXX_SDKTbay2VJeO6nM5xS7LPfWcsLZpQ0fOwzvCsA2o9QA/exec";
 
-        let isModelLoaded = false;
-        let isProcessing = false;
-        let isPaused = false; 
-        let scanValue = 0;
-        let currentUser = null; 
+        let cloudData = [];
 
-        async function init() {
-            try {
-                // ใช้ CDN สำหรับโหลด Model
-                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                isModelLoaded = true;
-                aiStatus.innerText = "SYSTEMS ONLINE";
-                aiStatus.classList.add('text-green-400');
-                startCamera();
-            } catch (e) {
-                aiStatus.innerText = "MODEL ERROR";
-                console.error(e);
-            }
-        }
-
-        async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: 640, height: 480 } 
-                });
-                video.srcObject = stream;
-                video.onloadedmetadata = () => startFaceDetection();
-            } catch (err) {
-                alert("กรุณาอนุญาตกล้อง (Camera Permission Required)");
-            }
-        }
-
-        function startFaceDetection() {
-            setInterval(async () => {
-                if (isProcessing || isPaused) return;
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-                if (detections.length > 0) {
-                    if (!currentUser) {
-                        statusText.innerText = "NOT REGISTERED";
-                        statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                        return;
-                    }
-                    onFaceFound();
-                } else {
-                    onFaceLost();
-                }
-            }, 100);
-        }
-
-        function onFaceFound() {
-            faceFrame.classList.add('detected');
-            scanLine.style.display = 'block';
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
-            statusText.innerText = "AUTHENTICATING...";
-            if (scanValue < 100) {
-                scanValue += 5;
-                progressBar.style.width = `${scanValue}%`;
-                scanPercent.innerText = `${scanValue}%`;
-                if (scanValue >= 100) handleCheckIn();
-            }
-        }
-
-        function onFaceLost() {
-            faceFrame.classList.remove('detected');
-            scanLine.style.display = 'none';
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-yellow-500";
-            statusText.innerText = currentUser ? "WAITING FOR FACE..." : "PLEASE REGISTER";
-            if (scanValue > 0) {
-                scanValue -= 2;
-                progressBar.style.width = `${scanValue}%`;
-                scanPercent.innerText = `${Math.max(0, scanValue)}%`;
-            }
-        }
-
-        async function handleCheckIn() {
-            if (isProcessing) return;
-            isProcessing = true;
-            statusText.innerText = "SYNCING CLOUD...";
-            successOverlay.style.display = 'block';
-
-            const payload = {
-                timestamp: new Date().toLocaleString('th-TH'),
-                fullName: currentUser.name,
-                employeeId: currentUser.role,
-                status: "Success"
-            };
-
-            // บันทึกลง Local Cache
-            let history = JSON.parse(localStorage.getItem('faceScanHistory') || '[]');
-            history.push(payload);
-            localStorage.setItem('faceScanHistory', JSON.stringify(history));
-
-            // ส่งไปยัง Google Sheets
-            if (SCRIPT_URL && !SCRIPT_URL.includes("XXXXXXXXXXXX")) {
-                try {
-                    await fetch(SCRIPT_URL, { 
-                        method: 'POST', 
-                        mode: 'no-cors', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload) 
-                    });
-                } catch (e) { console.error("Cloud Sync Error:", e); }
-            }
-
-            setTimeout(() => {
-                statusText.innerText = "CHECK-IN SUCCESSFUL";
-                setTimeout(() => {
-                    isProcessing = false;
-                    scanValue = 0;
-                    progressBar.style.width = '0%';
-                    scanPercent.innerText = '0%';
-                    successOverlay.style.display = 'none';
-                }, 2000);
-            }, 800);
-        }
-
-        function openRegistration() {
-            isPaused = true;
-            document.getElementById('registration-modal').style.display = 'flex';
-        }
-
-        function closeRegistration() {
-            isPaused = false;
-            document.getElementById('registration-modal').style.display = 'none';
-        }
-
-        function saveRegistration() {
-            const name = document.getElementById('regName').value.trim();
-            const roleSelect = document.getElementById('regRole');
-            const role = roleSelect.options[roleSelect.selectedIndex].text;
-            
-            if (!name) {
-                alert("กรุณากรอกชื่อ-นามสกุล");
+        async function fetchDataFromCloud() {
+            if (SCRIPT_URL.includes("XXXXXXXXXXXX")) {
+                alert("กรุณาระบุ SCRIPT_URL ที่ถูกต้องในส่วนของโค้ดก่อนเริ่มใช้งานครับ");
                 return;
             }
-            
-            currentUser = { name: name, role: role };
-            displayUser.innerText = name;
-            displayRole.innerText = role;
-            closeRegistration();
+
+            const btn = document.getElementById('syncBtn');
+            const icon = document.getElementById('syncIcon');
+            const overlay = document.getElementById('loadingOverlay');
+            const cloudStatusText = document.getElementById('cloudStatus');
+
+            btn.disabled = true;
+            icon.classList.add('sync-active');
+            overlay.style.display = 'flex';
+
+            try {
+                // เรียกใช้ API จาก Google Apps Script (ต้องมีฟังก์ชัน doGet ใน script)
+                const response = await fetch(SCRIPT_URL + "?action=read");
+                if (!response.ok) throw new Error("Network error");
+                
+                const data = await response.json();
+                
+                if (Array.isArray(data)) {
+                    cloudData = data;
+                    // อัปเดต Cache ไว้เผื่อฉุกเฉิน
+                    localStorage.setItem('faceScanHistory', JSON.stringify(data));
+                    renderTable();
+                    cloudStatusText.innerText = "ONLINE (SYNCED)";
+                }
+            } catch (error) {
+                console.error("Cloud Error:", error);
+                cloudStatusText.innerText = "OFFLINE (USING CACHE)";
+                // ถ้าดึง Cloud ไม่ได้ ให้ใช้ข้อมูลเก่าในเครื่องไปก่อน
+                cloudData = JSON.parse(localStorage.getItem('faceScanHistory') || '[]');
+                renderTable();
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('sync-active');
+                overlay.style.display = 'none';
+            }
         }
 
-        window.onload = init;
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const noData = document.getElementById('noData');
+            const totalScans = document.getElementById('totalScans');
+
+            tableBody.innerHTML = '';
+            totalScans.innerText = cloudData.length;
+
+            if (cloudData.length === 0) {
+                noData.classList.remove('hidden');
+            } else {
+                noData.classList.add('hidden');
+                // แสดงผลจากล่าสุดไปหาเก่าสุด
+                [...cloudData].reverse().forEach(log => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="cyber-font text-[10px]">${log.timestamp || '-'}</td>
+                        <td class="font-bold text-cyan-400">${log.fullName || 'Unknown'}</td>
+                        <td>${log.employeeId || log.role || '-'}</td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                <span class="text-[10px] text-gray-400 uppercase">Cloud Verified</span>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        function exportToPDF() {
+            if (cloudData.length === 0) {
+                alert("ไม่มีข้อมูลที่จะส่งออก กรุณากด Sync ข้อมูลก่อนครับ");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // ตกแต่งหัวกระดาษ PDF
+            doc.setFontSize(18);
+            doc.setTextColor(0, 180, 255);
+            doc.text("Google Sheets Attendance Report", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Data Source: Google Sheets`, 14, 28);
+            doc.text(`Generated At: ${new Date().toLocaleString('th-TH')}`, 14, 33);
+
+            const tableRows = cloudData.map(log => [
+                log.timestamp,
+                log.fullName,
+                log.employeeId || log.role || '-',
+                'Success'
+            ]);
+
+            doc.autoTable({
+                startY: 40,
+                head: [['วัน-เวลา', 'ชื่อ-นามสกุล', 'รหัส/ตำแหน่ง', 'สถานะ']],
+                body: tableRows,
+                headStyles: { fillColor: [0, 180, 255] },
+                styles: { font: 'helvetica' } // หมายเหตุ: PDF ภาษไทยต้องมีการโหลด Font เพิ่มเติมในโปรเจคจริง
+            });
+
+            doc.save(`Cloud_Report_${Date.now()}.pdf`);
+        }
+
+        // เมื่อเปิดหน้าจอให้ดึงข้อมูลจาก Cloud ทันที
+        window.onload = fetchDataFromCloud;
     </script>
 </body>
 </html>
