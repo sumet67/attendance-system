@@ -3,255 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Dashboard - AI Face Scanner (Cloud System)</title>
+    <title>Attendance Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #00f2ff;
-            --bg-dark: #0f111a;
-        }
-        body {
-            font-family: 'Kanit', sans-serif;
-            background-color: var(--bg-dark);
-            color: white;
-            min-height: 100vh;
-        }
+        body { font-family: 'Kanit', sans-serif; background: #0a0b10; color: white; }
+        .cyber-panel { background: rgba(16, 18, 27, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(0, 242, 255, 0.2); }
         .cyber-font { font-family: 'Orbitron', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1.5rem;
-        }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            background: rgba(0, 242, 255, 0.1);
-            color: var(--primary-color);
-            text-align: left;
-            padding: 1rem;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.9rem;
-        }
-        .btn-action { transition: all 0.3s; cursor: pointer; }
-        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2); }
-        .sync-active { animation: spin 2s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        /* สไตล์สำหรับ Loading Overlay */
-        #loadingOverlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-        }
     </style>
 </head>
 <body class="p-6">
-
-    <div id="loadingOverlay">
-        <div class="text-center">
-            <div class="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="cyber-font text-cyan-400 text-sm animate-pulse">CONNECTING TO GOOGLE SHEETS...</p>
-        </div>
-    </div>
-
     <div class="max-w-6xl mx-auto space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex justify-between items-end">
             <div>
-                <h1 class="text-3xl font-bold cyber-font text-cyan-400">CLOUD DASHBOARD</h1>
-                <p class="text-gray-400 text-sm">ข้อมูลเรียลไทม์จาก Google Sheets</p>
+                <h1 class="text-3xl font-bold text-cyan-400 cyber-font">DASHBOARD</h1>
+                <p class="text-gray-400 text-sm">ระบบสรุปเวลาเข้า-ออกงาน (Real-time Cloud Sync)</p>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="face_scanner.html" class="btn-action bg-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
-                    หน้าสแกน
-                </a>
-                <button id="syncBtn" onclick="fetchDataFromCloud()" class="btn-action bg-cyan-600 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-cyan-400">
-                    <svg id="syncIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    รีเฟรชข้อมูล (Cloud)
-                </button>
-                <button onclick="exportToPDF()" class="btn-action bg-red-600/20 hover:bg-red-600/30 text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    EXPORT PDF
-                </button>
+            <button onclick="fetchData()" class="px-6 py-2 bg-cyan-600/20 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-600/40 transition">
+                REFRESH DATA
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="cyber-panel p-5 rounded-2xl">
+                <p class="text-gray-400 text-xs uppercase cyber-font">Total Records</p>
+                <h2 id="totalCount" class="text-4xl font-bold text-white mt-1">0</h2>
+            </div>
+            <div class="cyber-panel p-5 rounded-2xl border-l-4 border-l-green-500">
+                <p class="text-gray-400 text-xs uppercase cyber-font">Completed Today</p>
+                <h2 id="todayCount" class="text-4xl font-bold text-green-400 mt-1">0</h2>
+            </div>
+            <div class="cyber-panel p-5 rounded-2xl border-l-4 border-l-yellow-500">
+                <p class="text-gray-400 text-xs uppercase cyber-font">Still Working</p>
+                <h2 id="workingCount" class="text-4xl font-bold text-yellow-400 mt-1">0</h2>
             </div>
         </div>
 
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-card p-6 border-l-4 border-cyan-500">
-                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">จำนวนการสแกนทั้งหมด</p>
-                <h2 id="totalScans" class="text-3xl font-bold cyber-font">0</h2>
-            </div>
-            <div class="glass-card p-6 border-l-4 border-green-500">
-                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">Cloud Status</p>
-                <h2 id="cloudStatus" class="text-xl font-bold cyber-font text-green-400 text-sm">CONNECTED</h2>
-            </div>
-            <div class="glass-card p-6 border-l-4 border-purple-500">
-                <p class="text-gray-400 text-xs uppercase cyber-font mb-1">Database Source</p>
-                <h2 class="text-xl font-bold cyber-font text-sm">GOOGLE SHEETS</h2>
-            </div>
-        </div>
-
-        <!-- Data Table -->
-        <div class="glass-card overflow-hidden">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center">
-                <h3 class="font-bold text-lg">ประวัติการลงเวลาล่าสุด</h3>
-                <span class="text-[10px] text-gray-500 uppercase cyber-font">ข้อมูลอัปเดตอัตโนมัติจาก Cloud</span>
-            </div>
-            <div class="table-container">
-                <table id="attendanceTable">
-                    <thead>
-                        <tr>
-                            <th>วัน-เวลา</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th>ตำแหน่ง/รหัส</th>
-                            <th>สถานะการเชื่อมต่อ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="text-gray-300">
-                        <!-- รายการจะถูกแทรกที่นี่ -->
-                    </tbody>
-                </table>
-                <div id="noData" class="p-20 text-center text-gray-600 hidden">
-                    ไม่พบข้อมูลบน Google Sheets
-                </div>
+        <div class="cyber-panel rounded-2xl overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-cyan-900/30 text-cyan-400 text-xs uppercase cyber-font">
+                    <tr>
+                        <th class="p-4">Date</th>
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Full Name</th>
+                        <th class="p-4">Check-In</th>
+                        <th class="p-4">Check-Out</th>
+                        <th class="p-4 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="text-sm divide-y divide-gray-800">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+            <div id="loading" class="p-10 text-center text-gray-500">
+                <div class="animate-spin w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                กำลังดึงข้อมูลจาก Cloud...
             </div>
         </div>
     </div>
 
     <script>
-        // --- ส่วนที่ต้องแก้ไข: ใส่ URL ของ Google Apps Script ของคุณ ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkATZh2KiV1u7A8d2VBgkTRmFd_S0K6A3U5m7KFrKidMlmp2wkYalK1Bza5-QfLkTlEw/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkATZh2KiV1u7A8d2VBgkTRmFd_S0K6A3U5m7KFrKidMlmp2wkYalK1Bza5-QfLkTlEw/exec"; 
 
-        let cloudData = [];
-
-        async function fetchDataFromCloud() {
+        async function fetchData() {
             if (SCRIPT_URL.includes("XXXXXXXXXXXX")) {
-                alert("กรุณาระบุ SCRIPT_URL ที่ถูกต้องในส่วนของโค้ดก่อนเริ่มใช้งานครับ");
+                alert("กรุณาตั้งค่า SCRIPT_URL ในโค้ดก่อนครับ");
                 return;
             }
 
-            const btn = document.getElementById('syncBtn');
-            const icon = document.getElementById('syncIcon');
-            const overlay = document.getElementById('loadingOverlay');
-            const cloudStatusText = document.getElementById('cloudStatus');
-
-            btn.disabled = true;
-            icon.classList.add('sync-active');
-            overlay.style.display = 'flex';
+            document.getElementById('loading').style.display = 'block';
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
 
             try {
-                // เรียกใช้ API จาก Google Apps Script (ต้องมีฟังก์ชัน doGet ใน script)
-                const response = await fetch(SCRIPT_URL + "?action=read");
-                if (!response.ok) throw new Error("Network error");
-                
+                const response = await fetch(`${SCRIPT_URL}?action=read`);
                 const data = await response.json();
                 
-                if (Array.isArray(data)) {
-                    cloudData = data;
-                    // อัปเดต Cache ไว้เผื่อฉุกเฉิน
-                    localStorage.setItem('faceScanHistory', JSON.stringify(data));
-                    renderTable();
-                    cloudStatusText.innerText = "ONLINE (SYNCED)";
-                }
-            } catch (error) {
-                console.error("Cloud Error:", error);
-                cloudStatusText.innerText = "OFFLINE (USING CACHE)";
-                // ถ้าดึง Cloud ไม่ได้ ให้ใช้ข้อมูลเก่าในเครื่องไปก่อน
-                cloudData = JSON.parse(localStorage.getItem('faceScanHistory') || '[]');
-                renderTable();
-            } finally {
-                btn.disabled = false;
-                icon.classList.remove('sync-active');
-                overlay.style.display = 'none';
-            }
-        }
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('totalCount').innerText = data.length;
+                
+                let todayDone = 0;
+                let working = 0;
+                const today = new Date().toLocaleDateString('th-TH');
 
-        function renderTable() {
-            const tableBody = document.getElementById('tableBody');
-            const noData = document.getElementById('noData');
-            const totalScans = document.getElementById('totalScans');
+                data.reverse().forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-white/5 transition";
+                    
+                    const isToday = row.date === today;
+                    if (isToday) {
+                        if (row.status === "Completed") todayDone++;
+                        else working++;
+                    }
 
-            tableBody.innerHTML = '';
-            totalScans.innerText = cloudData.length;
-
-            if (cloudData.length === 0) {
-                noData.classList.remove('hidden');
-            } else {
-                noData.classList.add('hidden');
-                // แสดงผลจากล่าสุดไปหาเก่าสุด
-                [...cloudData].reverse().forEach(log => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="cyber-font text-[10px]">${log.timestamp || '-'}</td>
-                        <td class="font-bold text-cyan-400">${log.fullName || 'Unknown'}</td>
-                        <td>${log.employeeId || log.role || '-'}</td>
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                <span class="text-[10px] text-gray-400 uppercase">Cloud Verified</span>
-                            </div>
+                    tr.innerHTML = `
+                        <td class="p-4 text-gray-400">${row.date}</td>
+                        <td class="p-4 font-mono text-cyan-400">${row.id}</td>
+                        <td class="p-4 font-semibold">${row.fullName}</td>
+                        <td class="p-4 text-green-400">${row.checkIn}</td>
+                        <td class="p-4 ${row.checkOut === '-' ? 'text-gray-600' : 'text-orange-400'}">${row.checkOut}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                row.status === 'Completed' ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'
+                            }">
+                                ${row.status}
+                            </span>
                         </td>
                     `;
-                    tableBody.appendChild(row);
+                    tableBody.appendChild(tr);
                 });
+
+                document.getElementById('todayCount').innerText = todayDone;
+                document.getElementById('workingCount').innerText = working;
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                document.getElementById('loading').innerText = "เกิดข้อผิดพลาดในการดึงข้อมูล";
             }
         }
 
-        function exportToPDF() {
-            if (cloudData.length === 0) {
-                alert("ไม่มีข้อมูลที่จะส่งออก กรุณากด Sync ข้อมูลก่อนครับ");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // ตกแต่งหัวกระดาษ PDF
-            doc.setFontSize(18);
-            doc.setTextColor(0, 180, 255);
-            doc.text("Google Sheets Attendance Report", 14, 20);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Data Source: Google Sheets`, 14, 28);
-            doc.text(`Generated At: ${new Date().toLocaleString('th-TH')}`, 14, 33);
-
-            const tableRows = cloudData.map(log => [
-                log.timestamp,
-                log.fullName,
-                log.employeeId || log.role || '-',
-                'Success'
-            ]);
-
-            doc.autoTable({
-                startY: 40,
-                head: [['วัน-เวลา', 'ชื่อ-นามสกุล', 'รหัส/ตำแหน่ง', 'สถานะ']],
-                body: tableRows,
-                headStyles: { fillColor: [0, 180, 255] },
-                styles: { font: 'helvetica' } // หมายเหตุ: PDF ภาษไทยต้องมีการโหลด Font เพิ่มเติมในโปรเจคจริง
-            });
-
-            doc.save(`Cloud_Report_${Date.now()}.pdf`);
-        }
-
-        // เมื่อเปิดหน้าจอให้ดึงข้อมูลจาก Cloud ทันที
-        window.onload = fetchDataFromCloud;
+        window.onload = fetchData;
     </script>
 </body>
 </html>
