@@ -2,7 +2,7 @@
  * scanner.js - ควบคุมการทำงานของหน้าสแกนใบหน้า
  */
 
-const SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0uP18K_Rrt9w3cwoBDVj46Lb3K2JvT2DOMx2NJQ-PFMZbrPlJnvHoAqSofr57YDB5Pw/exec"; 
 
 const video = document.getElementById('video');
 const faceFrame = document.getElementById('faceFrame');
