@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const SCRIPT_URL = "ใส่ URL Apps Script";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzWrYAmYGat5KF3WCsVEAlzz5SEzDGa8XtfZ45KhL7FrdXT3TivqNeCLQHwctKRFzi5Q/exec";
 
 let labeledDescriptors = [];
 let faceMatcher;
