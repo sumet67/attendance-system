@@ -35,6 +35,13 @@ async function loadMembers() {
     faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5);
 }
 
+const video = document.getElementById("video");
+const canvas = document.getElementById("overlay");
+const displaySize = { width: 320, height: 420 };
+
+faceapi.matchDimensions(canvas, displaySize);
+
+
 // ===== CAMERA =====
 async function startCamera() {
     const video = document.getElementById("video");
