@@ -155,5 +155,10 @@ async function registerFace(name) {
 
     alert("ลงทะเบียนสำเร็จ");
 }
-
+// CLOCK
+setInterval(() => {
+    const now = new Date();
+    document.getElementById("clock").innerText =
+        now.toLocaleTimeString();
+}, 1000);
 window.onload = init;
