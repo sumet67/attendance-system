@@ -1,89 +1,119 @@
 // ===== CONFIG =====
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoRuN97fOiJJrk-G3gOA8iPC-5VeAEnQxf_y0IhYxe3uEZKIJlF6TXNckdtDBYHIVHw/exec";
+const SCRIPT_URL = "ใส่ URL Apps Script";
 
-const video = document.getElementById('video');
-const statusText = document.getElementById('statusText');
-const statusDot = document.getElementById('statusDot');
-const aiStatus = document.getElementById('aiStatus');
-
+let labeledDescriptors = [];
+let faceMatcher;
 let lastScan = 0;
 
-// ===== START SYSTEM =====
-async function startSystem() {
-    aiStatus.innerText = "Loading AI...";
+// ===== START =====
+async function init() {
+    document.getElementById("aiStatus").innerText = "Loading AI...";
 
-    await faceapi.nets.tinyFaceDetector.loadFromUri(
-        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
-    );
+    await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"),
+        faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"),
+        faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/")
+    ]);
 
-    aiStatus.innerText = "Starting Camera...";
+    await loadMembers();
+
     startCamera();
+}
+
+// ===== LOAD MEMBERS =====
+async function loadMembers() {
+    const res = await fetch(SCRIPT_URL + "?action=members");
+    const members = await res.json();
+
+    labeledDescriptors = members.map(m => {
+        return new faceapi.LabeledFaceDescriptors(
+            m.name,
+            [new Float32Array(m.descriptor)]
+        );
+    });
+
+    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5);
 }
 
 // ===== CAMERA =====
 async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
+    const video = document.getElementById("video");
 
-        video.onloadedmetadata = () => {
-            video.play();
-            detectLoop();
-        };
-    } catch (err) {
-        aiStatus.innerText = "Camera Error";
-        console.error(err);
-    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+
+    video.onloadedmetadata = () => {
+        video.play();
+        detectLoop();
+    };
 }
 
-// ===== DETECT LOOP =====
+// ===== DETECT =====
 async function detectLoop() {
-    aiStatus.innerText = "System Ready";
+    const video = document.getElementById("video");
 
     setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(
-            video,
-            new faceapi.TinyFaceDetectorOptions()
-        );
+        const detection = await faceapi
+            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
 
-        if (detections.length > 0) {
-            statusText.innerText = "Face Detected";
-            statusText.style.color = "lime";
-            statusDot.style.background = "lime";
+        if (detection) {
+            const match = faceMatcher.findBestMatch(detection.descriptor);
 
-            const now = Date.now();
-
-            if (now - lastScan > 5000) {
-                lastScan = now;
-                sendData();
+            if (match.label !== "unknown") {
+                handleCheck(match.label);
             }
 
-        } else {
-            statusText.innerText = "Scanning...";
-            statusText.style.color = "yellow";
-            statusDot.style.background = "yellow";
         }
 
-    }, 500);
+    }, 800);
 }
 
-// ===== SEND TO GOOGLE SHEET =====
-async function sendData() {
-    try {
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                id: "EMP001",
-                name: "Demo User",
-                time: new Date().toLocaleString()
-            })
-        });
+// ===== CHECK IN/OUT =====
+async function handleCheck(name) {
+    const now = Date.now();
 
-        console.log("ส่งข้อมูลแล้ว");
-    } catch (err) {
-        console.error("ส่งข้อมูลล้มเหลว", err);
+    if (now - lastScan < 5000) return;
+    lastScan = now;
+
+    await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "check",
+            name: name,
+            time: new Date().toLocaleString()
+        })
+    });
+
+    console.log("Check:", name);
+}
+
+// ===== REGISTER =====
+async function registerFace(name) {
+    const video = document.getElementById("video");
+
+    const detection = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+    if (!detection) {
+        alert("ไม่พบใบหน้า");
+        return;
     }
+
+    await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "register",
+            name: name,
+            descriptor: Array.from(detection.descriptor)
+        })
+    });
+
+    alert("ลงทะเบียนสำเร็จ");
+    location.reload();
 }
 
-// ===== RUN =====
-window.onload = startSystem;
+window.onload = init;
