@@ -3,7 +3,7 @@
  */
 
 // *** สำคัญ: ต้องนำ URL จากการ Deploy (New Deployment) ใน Apps Script มาใส่ที่นี่ ***
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzViV1m5dijwuwAgkc2IeUOV-ABShN9L1owkog1CfPg8GbzXkj3wtHFOL9RqO6sWmFfRg/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYlzp_OForA0YcMAfE6P3Q3wOH4dDPcdKhenjOUQT6mSATm-p3AzwUMuhNsFcx5mPyhQ/exec"; 
 
 async function loadData() {
     const tableBody = document.getElementById('tableBody');
