@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>AI Attendance System</title>
+<title>AI Identity Scanner</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
@@ -10,46 +10,52 @@
 
 </head>
 
-<body class="bg-gradient-to-br from-[#0a0b10] to-[#111827] text-white flex items-center justify-center h-screen">
+<body class="bg-[#05060a] text-white flex items-center justify-center h-screen overflow-hidden">
 
-<div class="w-full max-w-md space-y-4">
+<!-- Background Glow -->
+<div class="absolute w-[600px] h-[600px] bg-cyan-500/20 blur-[150px] rounded-full"></div>
+
+<div class="relative w-full max-w-md space-y-4">
 
     <!-- HEADER -->
     <div class="text-center">
-        <h1 class="text-2xl font-bold text-cyan-400 tracking-wide">AI FACE SCAN</h1>
-        <p id="aiStatus" class="text-xs text-gray-400">Initializing...</p>
+        <h1 class="text-2xl tracking-widest text-cyan-400 font-bold glow">IDENTITY SCAN</h1>
+        <p id="aiStatus" class="text-xs text-gray-400">Initializing Neural Engine...</p>
     </div>
 
     <!-- SCANNER -->
-    <div class="scanner-box relative">
+    <div class="scanner-box">
+
         <video id="video" autoplay muted playsinline></video>
         <canvas id="overlay"></canvas>
+
+        <!-- Animated Frame -->
+        <div class="frame"></div>
 
         <!-- Scan Line -->
         <div class="scan-line"></div>
 
-        <!-- Status Overlay -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[85%] glass p-3 text-xs">
+        <!-- HUD -->
+        <div class="hud">
             <div class="flex justify-between">
-                <span id="statusText" class="text-yellow-400 font-bold">Scanning...</span>
-                <span id="clock" class="text-gray-400"></span>
+                <span id="statusText" class="text-yellow-400">Scanning...</span>
+                <span id="clock"></span>
             </div>
-
-            <div class="w-full bg-gray-800 h-1 mt-2 rounded-full">
-                <div id="progressBar" class="bg-cyan-400 h-1 w-0"></div>
+            <div class="progress">
+                <div id="progressBar"></div>
             </div>
         </div>
+
     </div>
 
-    <!-- ACTION -->
+    <!-- BUTTON -->
     <button onclick="registerFace(prompt('ชื่อพนักงาน'))"
-        class="w-full py-3 bg-cyan-500/10 border border-cyan-400 rounded-xl hover:bg-cyan-500/20 transition">
-        + ลงทะเบียนพนักงาน
+        class="btn-neon">
+        + REGISTER IDENTITY
     </button>
 
 </div>
 
 <script src="scanner.js"></script>
-
 </body>
 </html>
