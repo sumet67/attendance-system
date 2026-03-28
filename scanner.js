@@ -1,7 +1,5 @@
-// ===== CONFIG =====
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzWrYAmYGat5KF3WCsVEAlzz5SEzDGa8XtfZ45KhL7FrdXT3TivqNeCLQHwctKRFzi5Q/exec";
+const SCRIPT_URL = "ใส่ URL Apps Script";
 
-// ===== ELEMENT =====
 const video = document.getElementById("video");
 const canvas = document.getElementById("overlay");
 const statusText = document.getElementById("statusText");
@@ -20,50 +18,69 @@ async function init() {
         faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/")
     ]);
 
+    aiStatus.innerText = "Loading Members...";
     await loadMembers();
+
     startCamera();
 }
 
 // ===== LOAD MEMBERS =====
 async function loadMembers() {
-    const res = await fetch(SCRIPT_URL + "?action=members");
-    const members = await res.json();
+    try {
+        const res = await fetch(SCRIPT_URL + "?action=members");
+        const members = await res.json();
 
-    const labeled = members.map(m =>
-        new faceapi.LabeledFaceDescriptors(
-            m.name,
-            [new Float32Array(m.descriptor)]
-        )
-    );
+        const labeled = members.map(m =>
+            new faceapi.LabeledFaceDescriptors(
+                m.name,
+                [new Float32Array(m.descriptor)]
+            )
+        );
 
-    faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
+        faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
+
+    } catch {
+        faceMatcher = null;
+    }
 }
 
 // ===== CAMERA =====
 async function startCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
 
-    video.onloadedmetadata = () => {
-        video.play();
+        video.onloadedmetadata = () => {
+            video.play();
 
-        const displaySize = {
-            width: video.clientWidth,
-            height: video.clientHeight
+            setTimeout(() => {
+                const displaySize = {
+                    width: video.videoWidth,
+                    height: video.videoHeight
+                };
+
+                canvas.width = displaySize.width;
+                canvas.height = displaySize.height;
+
+                faceapi.matchDimensions(canvas, displaySize);
+
+                detectLoop(displaySize);
+                aiStatus.innerText = "System Ready";
+
+            }, 800);
         };
 
-        canvas.width = displaySize.width;
-        canvas.height = displaySize.height;
-
-        faceapi.matchDimensions(canvas, displaySize);
-
-        detectLoop(displaySize);
-    };
+    } catch (err) {
+        aiStatus.innerText = "Camera Error";
+        console.error(err);
+    }
 }
 
 // ===== DETECT LOOP =====
 function detectLoop(displaySize) {
     setInterval(async () => {
+
+        if (video.readyState !== 4) return;
 
         const detections = await faceapi
             .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
@@ -75,16 +92,17 @@ function detectLoop(displaySize) {
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        faceapi.draw.drawDetections(canvas, resized);
-
-        if (detections.length > 0) {
+        if (resized.length > 0) {
+            faceapi.draw.drawDetections(canvas, resized);
             statusText.innerText = "Face Detected";
             statusText.style.color = "lime";
 
-            const match = faceMatcher.findBestMatch(detections[0].descriptor);
+            if (faceMatcher) {
+                const match = faceMatcher.findBestMatch(detections[0].descriptor);
 
-            if (match.label !== "unknown") {
-                handleCheck(match.label);
+                if (match.label !== "unknown") {
+                    handleCheck(match.label);
+                }
             }
 
         } else {
@@ -92,10 +110,10 @@ function detectLoop(displaySize) {
             statusText.style.color = "yellow";
         }
 
-    }, 600);
+    }, 700);
 }
 
-// ===== CHECK IN/OUT =====
+// ===== CHECK =====
 async function handleCheck(name) {
     const now = Date.now();
 
@@ -111,7 +129,7 @@ async function handleCheck(name) {
         })
     });
 
-    console.log("Check:", name);
+    console.log("Checked:", name);
 }
 
 // ===== REGISTER =====
@@ -136,8 +154,6 @@ async function registerFace(name) {
     });
 
     alert("ลงทะเบียนสำเร็จ");
-    location.reload();
 }
 
-// ===== RUN =====
 window.onload = init;
