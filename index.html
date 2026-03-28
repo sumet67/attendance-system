@@ -2,24 +2,54 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>AI Scanner</title>
+<title>AI Attendance System</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 <link rel="stylesheet" href="style.css">
+
 </head>
 
-<body class="bg-black text-white flex items-center justify-center h-screen">
+<body class="bg-gradient-to-br from-[#0a0b10] to-[#111827] text-white flex items-center justify-center h-screen">
 
-<div class="scanner-box">
-    <video id="video" autoplay muted playsinline></video>
-    <canvas id="overlay"></canvas>
-</div>
+<div class="w-full max-w-md space-y-4">
 
-<div class="fixed bottom-10 text-center">
-    <p id="aiStatus">Loading...</p>
-    <p id="statusText" class="text-yellow-400">Scanning...</p>
+    <!-- HEADER -->
+    <div class="text-center">
+        <h1 class="text-2xl font-bold text-cyan-400 tracking-wide">AI FACE SCAN</h1>
+        <p id="aiStatus" class="text-xs text-gray-400">Initializing...</p>
+    </div>
+
+    <!-- SCANNER -->
+    <div class="scanner-box relative">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+
+        <!-- Scan Line -->
+        <div class="scan-line"></div>
+
+        <!-- Status Overlay -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[85%] glass p-3 text-xs">
+            <div class="flex justify-between">
+                <span id="statusText" class="text-yellow-400 font-bold">Scanning...</span>
+                <span id="clock" class="text-gray-400"></span>
+            </div>
+
+            <div class="w-full bg-gray-800 h-1 mt-2 rounded-full">
+                <div id="progressBar" class="bg-cyan-400 h-1 w-0"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION -->
+    <button onclick="registerFace(prompt('ชื่อพนักงาน'))"
+        class="w-full py-3 bg-cyan-500/10 border border-cyan-400 rounded-xl hover:bg-cyan-500/20 transition">
+        + ลงทะเบียนพนักงาน
+    </button>
+
 </div>
 
 <script src="scanner.js"></script>
+
 </body>
 </html>
