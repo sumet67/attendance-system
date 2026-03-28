@@ -1,7 +1,8 @@
 /**
- * scanner.js - เวอร์ชันปรับปรุงการตรวจจับใบหน้า (Enhanced Detection)
+ * scanner.js - เวอร์ชันแก้ไขปัญหา "สแกนไม่ติด" และ "เปอร์เซ็นต์ไม่ขึ้น"
  */
 
+// *** สำคัญ: นำ URL ที่ได้จากขั้นตอน Deploy ใน Apps Script มาวางที่นี่ ***
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbfzoXvTkHDCbKV6qK-i-faXH1adNyFJ5YXjiZH7eb1llZN7BhtBBpW6boIpviHx_hKg/exec"; 
 
 const video = document.getElementById('video');
@@ -27,10 +28,12 @@ async function init() {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
         document.getElementById('aiStatus').innerText = "SYSTEM INITIALIZING...";
         
-        // ใช้การโหลดแบบระบุชื่อโมเดลให้ชัดเจน
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        // โหลด Models
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        ]);
         
         isModelLoaded = true;
         document.getElementById('aiStatus').innerText = "AI ONLINE - READY";
@@ -65,7 +68,10 @@ async function startCamera() {
 }
 
 async function loadFaceDatabase() {
-    if (!SCRIPT_URL || SCRIPT_URL.includes("YOUR_APPS_SCRIPT")) return;
+    if (!SCRIPT_URL || SCRIPT_URL.includes("YOUR_APPS_SCRIPT")) {
+        console.warn("Script URL not found. Attendance will not work.");
+        return;
+    }
     try {
         const res = await fetch(`${SCRIPT_URL}?action=get_face_database`);
         const data = await res.json();
@@ -79,23 +85,28 @@ async function loadFaceDatabase() {
             }).filter(x => x !== null);
 
             if (labeledDescriptors.length > 0) {
-                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55); // ปรับค่า Threshold ให้แม่นยำขึ้น
-                console.log("Database Synced");
+                // ปรับค่า Threshold เป็น 0.6 เพื่อให้สแกนติดง่ายขึ้น (0.4 = เข้มงวดมาก, 0.7 = หละหลวม)
+                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6); 
+                console.log("Database Synced: " + labeledDescriptors.length + " users.");
             }
+        } else {
+            console.warn("No faces found in database.");
         }
-    } catch (e) { console.error("Database Error:", e); }
+    } catch (e) { 
+        console.error("Database Error:", e);
+        statusText.innerText = "DB Sync Failed";
+    }
 }
 
 /**
- * 2. ปรับปรุง Loop การตรวจจับ (Detection Loop)
+ * 2. Loop การตรวจจับใบหน้า
  */
 async function detectLoop() {
     if (isProcessing || isPaused || !isModelLoaded) {
-        setTimeout(detectLoop, 200);
+        requestAnimationFrame(detectLoop);
         return;
     }
 
-    // ปรับ Options ให้ตรวจจับได้กว้างขึ้น (inputSize: 416 หรือ 512 จะแม่นกว่าแต่ช้ากว่านิดหน่อย)
     const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
     
     const detection = await faceapi.detectSingleFace(video, options)
@@ -103,9 +114,7 @@ async function detectLoop() {
         .withFaceDescriptor();
 
     if (detection) {
-        // เมื่อเจอใบหน้า ให้แสดงกรอบสีฟ้า
         faceFrame.classList.add('detected');
-        faceFrame.style.border = "2px solid #00f2ff";
         
         if (faceMatcher) {
             const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
@@ -114,34 +123,40 @@ async function detectLoop() {
                 const [id, name] = bestMatch.label.split('|');
                 displayName.innerText = name;
                 displayID.innerText = `ID: ${id}`;
-                statusText.innerText = "IDENTIFIED";
+                statusText.innerText = "VERIFYING IDENTITY...";
                 statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
                 
-                scanValue += 20; // เพิ่มความเร็วในการสแกน
+                // เพิ่มเปอร์เซ็นต์ (เร่งความเร็วเมื่อเจอหน้าที่รู้จัก)
+                scanValue += 10; 
                 if (scanValue >= 100) {
                     scanValue = 100;
                     updateUIProgress();
                     await recordAttendance(id, name);
                 }
             } else {
-                displayName.innerText = "UNKNOWN";
-                displayID.innerText = "ACCESS DENIED";
-                statusText.innerText = "UNREGISTERED FACE";
+                // กรณีตรวจเจอหน้า แต่ไม่มีในฐานข้อมูล
+                displayName.innerText = "UNKNOWN PERSON";
+                displayID.innerText = "NOT REGISTERED";
+                statusText.innerText = "UNAUTHORIZED ACCESS";
                 statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                scanValue = Math.max(0, scanValue - 10);
+                // ลดเปอร์เซ็นต์ลงหากเป็นคนไม่รู้จัก
+                scanValue = Math.max(0, scanValue - 15);
             }
+        } else {
+            statusText.innerText = "WAITING FOR DATABASE...";
         }
     } else {
-        // เมื่อไม่เจอใบหน้า
+        // ไม่เจอใบหน้าเลย
         faceFrame.classList.remove('detected');
-        faceFrame.style.border = "1px solid rgba(255,255,255,0.2)";
         statusText.innerText = "SEARCHING FACE...";
         statusDot.className = "w-2.5 h-2.5 rounded-full bg-yellow-500";
+        // ค่อยๆ ลดเปอร์เซ็นต์ลงเมื่อไม่เห็นหน้า
         scanValue = Math.max(0, scanValue - 5);
+        displayName.innerText = "READY TO SCAN";
+        displayID.innerText = "WAIT FOR IDENTITY";
     }
 
     updateUIProgress();
-    // ปรับความถี่ในการสแกน (100ms คือ 10 ครั้งต่อวินาที)
     requestAnimationFrame(detectLoop);
 }
 
@@ -150,41 +165,58 @@ function updateUIProgress() {
     scanPercent.innerText = Math.floor(scanValue) + "%";
 }
 
+/**
+ * 3. บันทึกข้อมูลเข้า Google Sheets
+ */
 async function recordAttendance(id, fullName) {
     if (isProcessing) return;
     isProcessing = true;
     
+    statusText.innerText = "RECORDING DATA...";
     const [f, l] = fullName.split(' ');
     const payload = { action: "attendance", id, firstName: f, lastName: l };
     
     try {
+        // แสดง Overlay สำเร็จ
         document.getElementById('successOverlay').classList.remove('hidden');
         
-        const response = await fetch(SCRIPT_URL, {
+        // ส่งข้อมูลไปยัง Google Apps Script
+        await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Apps Script ต้องใช้โหมดนี้
             body: JSON.stringify(payload)
         });
 
-        // หน่วงเวลาเพื่อให้ผู้ใช้เห็นข้อความแจ้งเตือน "สแกนแล้ว" จากระบบ
+        statusText.innerText = "ATTENDANCE LOGGED!";
+        
+        // หน่วงเวลา 3 วินาทีเพื่อให้ผู้ใช้เห็นว่าสำเร็จ ก่อนจะเริ่มสแกนใหม่
         setTimeout(() => {
             document.getElementById('successOverlay').classList.add('hidden');
             scanValue = 0;
+            updateUIProgress();
             isProcessing = false;
-        }, 2000);
+        }, 3000);
+
     } catch (e) {
-        isProcessing = false;
+        console.error("Recording error:", e);
         statusText.innerText = "NETWORK ERROR";
+        isProcessing = false;
     }
 }
 
+/**
+ * 4. การลงทะเบียนใหม่
+ */
 function openReg() { isPaused = true; document.getElementById('registration-modal').classList.remove('hidden'); }
 function closeReg() { isPaused = false; document.getElementById('registration-modal').classList.add('hidden'); }
 
 async function saveMember() {
     const f = document.getElementById('regFName').value;
     const l = document.getElementById('regLName').value;
-    if (!f || !l) return;
+    if (!f || !l) {
+        alert("กรุณากรอกชื่อและนามสกุล");
+        return;
+    }
 
     document.getElementById('regForm').classList.add('hidden');
     document.getElementById('regProgress').classList.remove('hidden');
@@ -206,11 +238,18 @@ async function saveMember() {
                     action: "register", id: autoId, firstName: f, lastName: l,
                     faceData: JSON.stringify(Array.from(d.descriptor))
                 };
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                location.reload();
+                
+                try {
+                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                    alert("ลงทะเบียนสำเร็จ! ID: " + autoId);
+                    location.reload();
+                } catch(e) {
+                    alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+                    location.reload();
+                }
             }
         }
-    }, 500);
+    }, 400);
 }
 
 window.onload = init;
