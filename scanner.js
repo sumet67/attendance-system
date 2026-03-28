@@ -12,7 +12,7 @@ async function startSystem() {
         aiStatus.innerText = "Loading AI Model...";
 
         await faceapi.nets.tinyFaceDetector.loadFromUri(
-            "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+      "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
         );
 
         aiStatus.innerText = "Starting Camera...";
