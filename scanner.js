@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const SCRIPT_URL = "ใส่ URL Apps Script ตรงนี้";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoRuN97fOiJJrk-G3gOA8iPC-5VeAEnQxf_y0IhYxe3uEZKIJlF6TXNckdtDBYHIVHw/exec";
 
 const video = document.getElementById('video');
 const statusText = document.getElementById('statusText');
