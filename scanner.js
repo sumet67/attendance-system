@@ -1,54 +1,44 @@
 // ===== CONFIG =====
+const SCRIPT_URL = "ใส่ URL Apps Script ตรงนี้";
+
 const video = document.getElementById('video');
 const statusText = document.getElementById('statusText');
 const statusDot = document.getElementById('statusDot');
 const aiStatus = document.getElementById('aiStatus');
-const scanLine = document.getElementById('scanLine');
-const faceFrame = document.getElementById('faceFrame');
+
+let lastScan = 0;
 
 // ===== START SYSTEM =====
 async function startSystem() {
-    try {
-        aiStatus.innerText = "Loading AI Model...";
+    aiStatus.innerText = "Loading AI...";
 
-        await faceapi.nets.tinyFaceDetector.loadFromUri(
-      "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
-        );
+    await faceapi.nets.tinyFaceDetector.loadFromUri(
+        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
+    );
 
-        aiStatus.innerText = "Starting Camera...";
-        startCamera();
-
-    } catch (err) {
-        console.error(err);
-        aiStatus.innerText = "AI Load Failed";
-    }
+    aiStatus.innerText = "Starting Camera...";
+    startCamera();
 }
 
-// ===== START CAMERA =====
+// ===== CAMERA =====
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-        });
-
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
 
         video.onloadedmetadata = () => {
             video.play();
-            startDetection();
+            detectLoop();
         };
-
     } catch (err) {
-        console.error(err);
         aiStatus.innerText = "Camera Error";
+        console.error(err);
     }
 }
 
-// ===== FACE DETECTION LOOP =====
-async function startDetection() {
+// ===== DETECT LOOP =====
+async function detectLoop() {
     aiStatus.innerText = "System Ready";
-    scanLine.style.display = "block";
 
     setInterval(async () => {
         const detections = await faceapi.detectAllFaces(
@@ -57,23 +47,42 @@ async function startDetection() {
         );
 
         if (detections.length > 0) {
-            // พบใบหน้า
             statusText.innerText = "Face Detected";
-            statusText.className = "text-[11px] text-green-400 uppercase font-bold";
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-400";
+            statusText.style.color = "lime";
+            statusDot.style.background = "lime";
 
-            faceFrame.classList.add("detected");
+            const now = Date.now();
+
+            if (now - lastScan > 5000) {
+                lastScan = now;
+                sendData();
+            }
 
         } else {
-            // ไม่พบใบหน้า
             statusText.innerText = "Scanning...";
-            statusText.className = "text-[11px] text-yellow-500 uppercase font-bold";
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-yellow-500";
-
-            faceFrame.classList.remove("detected");
+            statusText.style.color = "yellow";
+            statusDot.style.background = "yellow";
         }
 
-    }, 300);
+    }, 500);
+}
+
+// ===== SEND TO GOOGLE SHEET =====
+async function sendData() {
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                id: "EMP001",
+                name: "Demo User",
+                time: new Date().toLocaleString()
+            })
+        });
+
+        console.log("ส่งข้อมูลแล้ว");
+    } catch (err) {
+        console.error("ส่งข้อมูลล้มเหลว", err);
+    }
 }
 
 // ===== RUN =====
