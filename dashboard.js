@@ -2,7 +2,7 @@
  * dashboard.js - ควบคุมการดึงข้อมูลประวัติการสแกน
  */
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykxtbyHMmIqS4yIQsfrleUvniwd92lhYv1G3k9Cf6AHT9x5WRP9ZnEX4icqaZVebt7Uw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlbdLDdlTFWESBjqy_P7TqhLA7yKi_aztTYSen_KSMfJEGMG3mkHS7kxnmrXEuDeSDww/exec";
 
 async function loadData() {
     if (SCRIPT_URL.includes("YOUR_APPS_SCRIPT")) return;
