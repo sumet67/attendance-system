@@ -3,7 +3,7 @@
  */
 
 // *** สำคัญที่สุด: ตรวจสอบ URL นี้ให้ถูกต้อง (ต้องลงท้ายด้วย /exec) ***
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjWs8Dia5fCUcy7iBqSvNzswi96bHirt0ItvOPNQGEtwuf_iGJevUGnh0N4q8YLVXvgg/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAAlkW_ly5xbkMZRHICPylIMFcgQDd4DXyvlVK_NmyHobW9WE1j3lLchdGFEEktLWCZA/exec"; 
 
 const video = document.getElementById('video');
 const faceFrame = document.getElementById('faceFrame');
