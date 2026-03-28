@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* สไตล์เพิ่มเติมสำหรับหน้า Dashboard */
         .status-pill {
             padding: 2px 10px;
             border-radius: 99px;
@@ -17,132 +16,62 @@
         }
     </style>
 </head>
-<body class="p-6 overflow-y-auto h-auto bg-[#0a0b10] text-white">
+<body class="p-6 bg-[#0a0b10] text-white">
     <div class="max-w-6xl mx-auto space-y-6">
         <div class="flex justify-between items-end">
             <div>
-                <h1 class="text-3xl font-bold text-cyan-400 cyber-font">ATTENDANCE DASHBOARD</h1>
-                <p class="text-gray-400 text-sm">ประวัติการลงเวลาเข้า-ออกงาน</p>
+                <h1 class="text-3xl font-bold text-cyan-400 cyber-font">DASHBOARD</h1>
+                <p class="text-gray-400 text-sm font-light">ระบบติดตามการเข้า-ออกงานแบบเรียลไทม์</p>
             </div>
             <div class="flex gap-2">
-                <a href="index.html" class="nav-btn">BACK TO SCANNER</a>
-                <!-- ปุ่มเรียกใช้ฟังก์ชัน loadData -->
-                <button onclick="loadData()" class="px-6 py-2 bg-cyan-600/20 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-600/40 transition">REFRESH</button>
+                <a href="index.html" class="nav-btn text-[11px]">BACK TO SCANNER</a>
+                <button onclick="loadData()" class="px-6 py-2 bg-cyan-600/20 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-600/40 transition cyber-font text-xs">REFRESH</button>
             </div>
         </div>
 
-        <!-- การ์ดแสดงผลสถิติ -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="glass p-6 rounded-2xl border-b-2 border-cyan-500">
-                <p class="text-gray-500 text-xs uppercase cyber-font">Total Members</p>
-                <h2 id="countTotal" class="text-4xl font-bold mt-1">0</h2>
+            <div class="glass p-6 rounded-2xl border-b-2 border-cyan-500 bg-white/5">
+                <p class="text-gray-500 text-[10px] uppercase cyber-font">พนักงานทั้งหมด</p>
+                <h2 id="countTotal" class="text-4xl font-bold mt-1 tracking-tighter">0</h2>
             </div>
-            <div class="glass p-6 rounded-2xl border-b-2 border-green-500">
-                <p class="text-gray-500 text-xs uppercase cyber-font">Completed Today</p>
-                <h2 id="countDone" class="text-4xl font-bold text-green-400 mt-1">0</h2>
+            <div class="glass p-6 rounded-2xl border-b-2 border-green-500 bg-white/5">
+                <p class="text-gray-500 text-[10px] uppercase cyber-font">สแกนครบแล้ว (In/Out)</p>
+                <h2 id="countDone" class="text-4xl font-bold text-green-400 mt-1 tracking-tighter">0</h2>
             </div>
-            <div class="glass p-6 rounded-2xl border-b-2 border-yellow-500">
-                <p class="text-gray-500 text-xs uppercase cyber-font">Working Now</p>
-                <h2 id="countActive" class="text-4xl font-bold text-yellow-400 mt-1">0</h2>
+            <div class="glass p-6 rounded-2xl border-b-2 border-yellow-500 bg-white/5">
+                <p class="text-gray-500 text-[10px] uppercase cyber-font">กำลังปฏิบัติงาน</p>
+                <h2 id="countActive" class="text-4xl font-bold text-yellow-400 mt-1 tracking-tighter">0</h2>
             </div>
         </div>
 
-        <!-- ตารางแสดงข้อมูล -->
-        <div class="glass rounded-2xl overflow-hidden shadow-2xl">
+        <div class="glass rounded-2xl overflow-hidden shadow-2xl border border-white/5">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
-                    <thead class="bg-cyan-900/20 text-cyan-400 text-xs uppercase cyber-font">
+                    <thead class="bg-cyan-900/20 text-cyan-400 text-[10px] uppercase cyber-font">
                         <tr>
-                            <th class="p-4">Date</th>
-                            <th class="p-4">ID</th>
-                            <th class="p-4">Name</th>
-                            <th class="p-4">Check-In</th>
-                            <th class="p-4">Check-Out</th>
-                            <th class="p-4 text-center">Status</th>
+                            <th class="p-4">วันที่</th>
+                            <th class="p-4">ID พนักงาน</th>
+                            <th class="p-4">ชื่อ-นามสกุล</th>
+                            <th class="p-4">เวลาเข้า</th>
+                            <th class="p-4">เวลาออก</th>
+                            <th class="p-4 text-center">สถานะ</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="text-sm divide-y divide-gray-800">
-                        <!-- ข้อมูลจะถูกโหลดที่นี่ -->
+                    <tbody id="tableBody" class="text-sm divide-y divide-white/5">
+                        <!-- ข้อมูลจะถูกเติมที่นี่ -->
                     </tbody>
                 </table>
             </div>
-            <!-- สถานะการโหลด -->
-            <div id="loader" class="p-12 text-center text-gray-500">
-                <div class="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                <span class="cyber-font text-[10px]">Syncing Data...</span>
+            <div id="loader" class="p-16 text-center text-gray-500">
+                <div class="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p class="cyber-font text-[10px] tracking-widest animate-pulse">Synchronizing Data...</p>
+            </div>
+            <div id="error-msg" class="hidden p-8 text-center text-red-400 cyber-font text-xs uppercase">
+                ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบ SCRIPT_URL
             </div>
         </div>
     </div>
 
-    <script>
-        /**
-         * ย้าย Logic จาก dashboard.js มาไว้ที่นี่เพื่อป้องกันความผิดพลาดในการเรียกไฟล์
-         * อย่าลืมเปลี่ยน SCRIPT_URL เป็น URL ที่ได้จาก Google Apps Script ของคุณ
-         */
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzViV1m5dijwuwAgkc2IeUOV-ABShN9L1owkog1CfPg8GbzXkj3wtHFOL9RqO6sWmFfRg/exec"; 
-
-        async function loadData() {
-            // ตรวจสอบว่ามีการระบุ URL หรือยัง
-            if (!SCRIPT_URL || SCRIPT_URL.includes("YOUR_APPS_SCRIPT")) {
-                console.warn("Please set your Google Apps Script URL in SCRIPT_URL variable.");
-                document.getElementById('loader').innerHTML = '<span class="text-yellow-500 text-xs uppercase cyber-font">URL Not Configured</span>';
-                return;
-            }
-            
-            const tableBody = document.getElementById('tableBody');
-            const loader = document.getElementById('loader');
-            
-            loader.style.display = 'block';
-            tableBody.innerHTML = '';
-
-            try {
-                // ดึงข้อมูลจาก Google Sheets
-                const response = await fetch(`${SCRIPT_URL}?action=read`);
-                const data = await response.json();
-                
-                loader.style.display = 'none';
-                let done = 0, active = 0;
-                let unique = new Set();
-                const today = new Date().toLocaleDateString('th-TH');
-
-                // จัดเรียงข้อมูลใหม่ (ล่าสุดขึ้นก่อน)
-                data.reverse().forEach(row => {
-                    unique.add(row.id);
-                    if (row.date === today) {
-                        if (row.status === "Completed") done++;
-                        else active++;
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-white/5 transition";
-                    tr.innerHTML = `
-                        <td class="p-4 text-gray-500">${row.date}</td>
-                        <td class="p-4 text-cyan-400 font-mono font-bold">${row.id}</td>
-                        <td class="p-4 font-medium">${row.fullName}</td>
-                        <td class="p-4 text-green-400">${row.checkIn}</td>
-                        <td class="p-4 text-orange-400">${row.checkOut}</td>
-                        <td class="p-4 text-center">
-                            <span class="status-pill ${row.status === 'Completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}">
-                                ${row.status}
-                            </span>
-                        </td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
-
-                // อัปเดตตัวเลขสถิติบน Dashboard
-                document.getElementById('countTotal').innerText = unique.size;
-                document.getElementById('countDone').innerText = done;
-                document.getElementById('countActive').innerText = active;
-
-            } catch (e) {
-                console.error("Fetch Error:", e);
-                loader.innerHTML = '<span class="text-red-500 cyber-font text-[10px]">Error Loading Data - Check SCRIPT_URL</span>';
-            }
-        }
-
-        // โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ
-        window.onload = loadData;
-    </script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
