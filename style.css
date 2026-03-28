@@ -1,13 +1,16 @@
 body {
     margin: 0;
+    font-family: 'Kanit', sans-serif;
 }
 
 .scanner-box {
     position: relative;
-    width: 400px;
-    height: 500px;
+    width: 100%;
+    height: 420px;
+    border-radius: 20px;
     overflow: hidden;
-    border: 2px solid cyan;
+    border: 2px solid rgba(0,255,255,0.2);
+    box-shadow: 0 0 40px rgba(0,255,255,0.1);
 }
 
 video {
@@ -21,4 +24,24 @@ video {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.glass {
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: cyan;
+    animation: scan 3s infinite;
+}
+
+@keyframes scan {
+    0% { top: 10%; opacity: 0; }
+    50% { top: 90%; opacity: 1; }
+    100% { top: 10%; opacity: 0; }
 }
