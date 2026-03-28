@@ -1,4 +1,4 @@
-const SCRIPT_URL = "ใส่ URL Apps Script";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoRuN97fOiJJrk-G3gOA8iPC-5VeAEnQxf_y0IhYxe3uEZKIJlF6TXNckdtDBYHIVHw/exec";
 
 async function loadData() {
     const res = await fetch(SCRIPT_URL);
