@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoRuN97fOiJJrk-G3gOA8iPC-5VeAEnQxf_y0IhYxe3uEZKIJlF6TXNckdtDBYHIVHw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzWrYAmYGat5KF3WCsVEAlzz5SEzDGa8XtfZ45KhL7FrdXT3TivqNeCLQHwctKRFzi5Q/exec";
 
 async function loadData() {
     const res = await fetch(SCRIPT_URL);
@@ -10,8 +10,6 @@ async function loadData() {
     data.reverse().forEach(row => {
         table.innerHTML += `
         <tr>
-            <td>${row.date}</td>
-            <td>${row.id}</td>
             <td>${row.name}</td>
             <td>${row.time}</td>
         </tr>`;
