@@ -1,4 +1,4 @@
-const SCRIPT_URL = "ใส่ URL Apps Script";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuCOPWiU_-52BCVOznPZx3wIgAPtdQFPylKdcEgBn_bFHMNnTCgXTXZT3o7TiP0q0-SQ/exec";
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("overlay");
